@@ -15,9 +15,10 @@ type Client struct {
 }
 
 type Config struct {
-	BaseURL           string
-	StatusGetAttempts int
-	StatusGetDelay    time.Duration
+	BaseURL                              string
+	StatusGetAttempts                    int
+	StatusGetMinDelay, StatusGetMaxDelay time.Duration
+	StatusGetDelayFactor                 int
 }
 
 func New(cli *http.Client, config Config) *Client {
@@ -58,7 +59,15 @@ func setConfigDefaults(config *Config) {
 		config.StatusGetAttempts = 1
 	}
 
-	if config.StatusGetDelay == 0 {
-		config.StatusGetDelay = time.Millisecond
+	if config.StatusGetMinDelay == 0 {
+		config.StatusGetMinDelay = time.Millisecond
+	}
+
+	if config.StatusGetMinDelay == 0 {
+		config.StatusGetMinDelay = time.Millisecond * 20
+	}
+
+	if config.StatusGetDelayFactor < 2 {
+		config.StatusGetDelayFactor = 2
 	}
 }
