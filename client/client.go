@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type Client struct {
@@ -16,6 +17,7 @@ type Client struct {
 type Config struct {
 	BaseURL           string
 	StatusGetAttempts int
+	StatusGetDelay    time.Duration
 }
 
 func New(cli *http.Client, config Config) *Client {
@@ -54,5 +56,9 @@ func (c *Client) url(path string) string {
 func setConfigDefaults(config *Config) {
 	if config.StatusGetAttempts < 1 {
 		config.StatusGetAttempts = 1
+	}
+
+	if config.StatusGetDelay == 0 {
+		config.StatusGetDelay = time.Millisecond
 	}
 }

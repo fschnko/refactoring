@@ -1,6 +1,9 @@
 package client
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Status int
 
@@ -27,6 +30,8 @@ func (c *Client) Status(token string) (Status, error) {
 		if status != StatusUnknown {
 			return status, nil
 		}
+
+		time.Sleep(c.config.StatusGetDelay)
 	}
 
 	return StatusUnknown, fmt.Errorf("failed %d attempts to get status", c.config.StatusGetAttempts)
