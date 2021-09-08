@@ -14,10 +14,13 @@ type Client struct {
 }
 
 type Config struct {
-	BaseURL string
+	BaseURL           string
+	StatusGetAttempts int
 }
 
 func New(cli *http.Client, config Config) *Client {
+	setConfigDefaults(&config)
+
 	return &Client{
 		c:      cli,
 		config: config,
@@ -46,4 +49,10 @@ func (c *Client) request(path string, v interface{}) error {
 
 func (c *Client) url(path string) string {
 	return c.config.BaseURL + path
+}
+
+func setConfigDefaults(config *Config) {
+	if config.StatusGetAttempts < 1 {
+		config.StatusGetAttempts = 1
+	}
 }

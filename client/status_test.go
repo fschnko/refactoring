@@ -54,7 +54,7 @@ func TestClientStatus(t *testing.T) {
 
 		c := New(http.DefaultClient, Config{BaseURL: svr.URL})
 		result, err := c.Status("dummy")
-		assert.NoError(t, err)
+		assert.Error(t, err)
 		assert.Equal(t, result, StatusUnknown)
 	})
 }
