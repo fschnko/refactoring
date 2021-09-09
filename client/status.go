@@ -20,16 +20,28 @@ func (c *Client) Status(token string) (Status, error) {
 	}
 
 	delay := c.config.StatusGetMinDelay
-	sleep := func() {
-		time.Sleep(delay)
+	counter := 0
+	next := func() bool {
+		counter++
 
+		if counter == 1 {
+			return true
+		}
+
+		if counter > c.config.StatusGetAttempts {
+			return false
+		}
+
+		time.Sleep(delay)
 		delay *= time.Duration(c.config.StatusGetDelayFactor)
 		if delay > c.config.StatusGetMaxDelay {
 			delay = c.config.StatusGetMaxDelay
 		}
+
+		return true
 	}
 
-	for i := 0; i < c.config.StatusGetAttempts; i++ {
+	for next() {
 		err := c.request("/status/"+token, &resp)
 		if err != nil {
 			return StatusUnknown, fmt.Errorf("request status: %w", err)
@@ -40,8 +52,6 @@ func (c *Client) Status(token string) (Status, error) {
 		if status != StatusUnknown {
 			return status, nil
 		}
-
-		sleep()
 	}
 
 	return StatusUnknown, fmt.Errorf("failed %d attempts to get status", c.config.StatusGetAttempts)
