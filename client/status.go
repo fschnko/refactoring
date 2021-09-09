@@ -19,27 +19,7 @@ func (c *Client) Status(token string) (Status, error) {
 		Message string `json:"message"`
 	}
 
-	delay := c.config.StatusGetMinDelay
-	counter := 0
-	next := func() bool {
-		counter++
-
-		if counter == 1 {
-			return true
-		}
-
-		if counter > c.config.StatusGetAttempts {
-			return false
-		}
-
-		time.Sleep(delay)
-		delay *= time.Duration(c.config.StatusGetDelayFactor)
-		if delay > c.config.StatusGetMaxDelay {
-			delay = c.config.StatusGetMaxDelay
-		}
-
-		return true
-	}
+	next := backoffRepeater(c.config.StatusGetAttempts, c.config.StatusGetMinDelay, c.config.StatusGetMaxDelay, c.config.StatusGetDelayFactor)
 
 	for next() {
 		err := c.request("/status/"+token, &resp)
@@ -67,5 +47,29 @@ func status(message string) Status {
 		return StatusSuccess
 	default:
 		return StatusUnknown
+	}
+}
+
+func backoffRepeater(attempts int, min, max time.Duration, factor int) func() bool {
+	delay := min
+	counter := 0
+	return func() bool {
+		counter++
+
+		if counter == 1 {
+			return true
+		}
+
+		if counter > attempts {
+			return false
+		}
+
+		time.Sleep(delay)
+		delay *= time.Duration(factor)
+		if delay > max {
+			delay = max
+		}
+
+		return true
 	}
 }
